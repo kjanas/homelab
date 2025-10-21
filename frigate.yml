@@ -1,0 +1,60 @@
+services:
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    restart: always
+    expose:
+      - "8971" # Internal Web UI
+      - "5000" # Web UI
+      - "8554" # RTSP
+      - "8555" # WebRTC
+    environment:
+      - PLUS_API_KEY=${FRIGATE_PLUS_API_KEY}
+      - FRIGATE_RTSP_USER=${FRIGATE_RTSP_USER}
+      - FRIGATE_RTSP_PASSWORD=${FRIGATE_RTSP_PASSWORD}
+      - FRIGATE_MQTT_HOST=${FRIGATE_MQTT_HOST}
+      - FRIGATE_MQTT_PORT=${FRIGATE_MQTT_PORT}
+      - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER}
+      - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD}
+      - LIBVA_DRIVER_NAME=i965
+      - FRIGATE_DRIVEWAY_CAM_IP=${FRIGATE_DRIVEWAY_CAM_IP}
+      - FRIGATE_DRIVEWAY_CAM_PORT=${FRIGATE_DRIVEWAY_CAM_PORT}
+    volumes:
+      - ${STACK_PATH}/frigate/config:/config
+      - ${STACK_PATH}/frigate/media:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      # WebUI
+      - traefik.http.routers.frigate.rule=Host(`frigate.${DOMAIN}`)
+      - traefik.http.routers.frigate.entrypoints=websecure
+      - traefik.http.routers.frigate.tls=true
+      - traefik.http.routers.frigate.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.frigate.service=frigate
+      - traefik.http.services.frigate.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_HTTP}
+      # RTSP
+      - traefik.tcp.routers.frigate_rtsp.rule=HostSNI(`*`)
+      - traefik.tcp.routers.frigate_rtsp.entrypoints=rtsp
+      - traefik.tcp.routers.frigate_rtsp.service=frigate_rtsp
+      - traefik.tcp.services.frigate_rtsp.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_TCP_RTSP}
+      # WebRTC
+      - traefik.tcp.routers.frigate_webrtc.rule=HostSNI(`*`)
+        # TCP
+      - traefik.tcp.routers.frigate_webrtc.entrypoints=webrtc_tcp
+      - traefik.tcp.routers.frigate_webrtc.service=frigate_webrtc
+      - traefik.tcp.services.frigate_webrtc.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_TCP_WEBRTC}
+        # UDP
+      - traefik.udp.routers.frigate_webrtc.entrypoints=webrtc_udp
+      - traefik.udp.routers.frigate_webrtc.service=frigate_webrtc
+      - traefik.udp.services.frigate_webrtc.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_UDP}
+    devices:
+      - /dev/apex_0:/dev/apex_0
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    privileged: true 
+    stop_grace_period: 30s
+    shm_size: "1024mb"

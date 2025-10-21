@@ -1,0 +1,142 @@
+services:
+  homeassistant:
+    image: homeassistant/home-assistant:latest
+    container_name: homeassistant
+    restart: always
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${STACK_PATH}/homeassistant/addons:/addons
+      - ${STACK_PATH}/homeassistant/config:/config
+      - ${STACK_PATH}/homeassistant/media:/media
+      - ${STACK_PATH}/homeassistant/share:/share
+      - ${STACK_PATH}/homeassistant/ssl:/ssl
+      - ${STACK_PATH}/homeassistant/.ssh:/root/.ssh/
+    depends_on:
+      - mosquitto
+      - nodered
+      - zigbee2mqtt
+      - esphome
+      - mysql
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.homeassistant.rule=Host(`homeassistant.${DOMAIN}`)
+      - traefik.http.routers.homeassistant.entrypoints=websecure
+      - traefik.http.routers.homeassistant.tls=true
+      - traefik.http.routers.homeassistant.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.homeassistant.service=homeassistant
+      - traefik.http.services.homeassistant.loadbalancer.server.port=${HASS_SERVICE_PORT}
+
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: always
+    user: root
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STACK_PATH}/nodered/data:/data
+    depends_on:
+      - zigbee2mqtt
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nodered.rule=Host(`nodered.${DOMAIN}`)
+      - traefik.http.routers.nodered.entrypoints=websecure
+      - traefik.http.routers.nodered.tls=true
+      - traefik.http.routers.nodered.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.nodered.service=nodered
+      - traefik.http.services.nodered.loadbalancer.server.port=${NR_SERVICE_PORT}
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt
+    container_name: z2m
+    restart: always
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STACK_PATH}/z2m/data:/app/data
+      - /run/udev:/run/udev:ro
+    depends_on:
+      - mosquitto
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.zigbee2mqtt.rule=Host(`z2m.${DOMAIN}`)
+      - traefik.http.routers.zigbee2mqtt.entrypoints=websecure
+      - traefik.http.routers.zigbee2mqtt.tls=true
+      - traefik.http.routers.zigbee2mqtt.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.zigbee2mqtt.service=zigbee2mqtt
+      - traefik.http.services.zigbee2mqtt.loadbalancer.server.port=${Z2M_SERVICE_PORT}
+    devices:
+      - /dev/serial/by-id/usb-dresden_elektronik_ingenieurtechnik_GmbH_ConBee_II_DE2485942-if00:/dev/ttyACM0
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: always
+    expose:
+      - 1883/tcp
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STACK_PATH}/mosquitto/config:/mosquitto/config
+      - ${STACK_PATH}/mosquitto/data:/mosquitto/data
+      - ${STACK_PATH}/mosquitto/log:/mosquitto/log
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.mqtt.rule=HostSNI(`*`)
+      - traefik.tcp.routers.mqtt.entrypoints=mqtt
+      - traefik.tcp.routers.mqtt.service=mqtt
+      - traefik.tcp.services.mqtt.loadbalancer.server.port=${MQTT_SERVICE_PORT}
+
+  esphome:
+    image: esphome/esphome:latest
+    container_name: esphome
+    restart: always
+    environment:
+      - TZ=${TZ}
+      - ESPHOME_DASHBOARD_USE_PING=true
+    volumes:
+      - ${STACK_PATH}/esphome/config:/config
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.esphome.rule=Host(`esphome.${DOMAIN}`)
+      - traefik.http.routers.esphome.entrypoints=websecure
+      - traefik.http.routers.esphome.tls=true
+      - traefik.http.routers.esphome.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.esphome.service=esphome
+      - traefik.http.services.esphome.loadbalancer.server.port=${ESPHOME_SERVICE_PORT}
+    devices:
+      - /dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0:/dev/ttyUSB0
+  
+  appdaemon:
+    image: acockburn/appdaemon:latest
+    container_name: appdaemon
+    restart: always
+    expose:
+      - "5050"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STACK_PATH}/appdaemon/conf:/conf
+      - ${STACK_PATH}/homeassistant/config/appdaemon/apps:/homeassistant_apps
+    depends_on:
+      - homeassistant
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.appdaemon.rule=HostSNI(`*`)
+      - traefik.tcp.routers.appdaemon.entrypoints=appdaemon
+      - traefik.tcp.routers.appdaemon.service=appdaemon
+      - traefik.tcp.services.appdaemon.loadbalancer.server.port=${APPDAEMON_SERVICE_PORT}

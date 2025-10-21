@@ -1,0 +1,20 @@
+services:
+  homeassistant_test:
+    image: homeassistant/home-assistant:latest
+    container_name: homeassistant_test
+    restart: always
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${STACK_PATH}/homeassistant_test/config:/config
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.homeassistant_test.rule=Host(`test.${DOMAIN}`)
+      - traefik.http.routers.homeassistant_test.entrypoints=websecure
+      - traefik.http.routers.homeassistant_test.tls=true
+      - traefik.http.routers.homeassistant_test.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.homeassistant_test.service=homeassistant_test
+      - traefik.http.services.homeassistant_test.loadbalancer.server.port=${HASS_SERVICE_PORT}

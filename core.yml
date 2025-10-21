@@ -1,0 +1,73 @@
+networks:
+  network_core:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NETWORK_CORE_SUBNET}
+          gateway: ${NETWORK_CORE_GATEWAY}
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: always
+    environment:
+      - TZ=${TZ}
+      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+    ports:
+      - 80:80         # http
+      - 443:443       # https
+      - 1883:1883     # MQTT
+      - 3306:3306     # MySQL
+    volumes:
+      - ${STACK_PATH}/traefik:/etc/traefik
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - network_core
+    labels:
+        - traefik.enable=true
+        - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
+        - traefik.http.routers.traefik.entrypoints=websecure
+        - traefik.http.routers.traefik.tls=true
+        - traefik.http.routers.traefik.tls.certresolver=${CERT_RESOLVER}
+        - traefik.http.routers.traefik.service=api@internal
+
+  portainer:
+    image: portainer/portainer-ee:sts
+    container_name: portainer
+    restart: always
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STACK_PATH}/portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      # Frontend
+      - traefik.http.routers.frontend.rule=Host(`portainer.${DOMAIN}`)
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls=true
+      - traefik.http.routers.frontend.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.frontend.service=frontend
+      - traefik.http.services.frontend.loadbalancer.server.port=${PORTAINER_FRONTEND_SERVICE_PORT}
+      # Edge
+      - traefik.http.routers.edge.rule=Host(`edge.${DOMAIN}`)
+      - traefik.http.routers.edge.entrypoints=websecure
+      - traefik.http.routers.edge.tls=true
+      - traefik.http.routers.edge.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.edge.service=edge
+      - traefik.http.services.edge.loadbalancer.server.port=${PORTAINER_EDGE_SERVICE_PORT}
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: always
+    environment:
+      - TZ=${TZ}
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    networks:
+      - network_core
+    command: tunnel run

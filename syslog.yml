@@ -1,0 +1,29 @@
+networks:
+  network_syslog:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NETWORK_SYSLOG_SUBNET}
+          gateway: ${NETWORK_SYSLOG_GATEWAY}
+
+services:
+  syslog:
+    image: balabit/syslog-ng:latest
+    container_name: syslog
+    restart: always
+    ports:
+      - 514:514/udp
+      - 514:514/tcp
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STACK_PATH}/syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+      - ${STACK_PATH}/syslog/log:/var/log
+    networks:
+      - network_syslog
+    healthcheck:
+      test: ['CMD-SHELL', 'syslog-ng-ctl healthcheck']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    entrypoint: syslog-ng -F --no-caps #-d -v -e 

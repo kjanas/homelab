@@ -1,0 +1,81 @@
+COMPOSE_FILE=core.yml:frigate.yml:db.yml:smarthome.yml:syslog.yml:homeassistant_test.yml:n8n.yml:code.yml
+
+# Common
+TZ=timezone
+
+STACK_PATH=stack_path
+DOMAIN=domain
+CERT_RESOLVER=cert_resolver
+
+# Networks
+NETWORK_CORE_SUBNET=network_core_subnet
+NETWORK_CORE_GATEWAY=network_core_gateway
+
+NETWORK_SYSLOG_SUBNET=network_syslog_subnet
+NETWORK_SYSLOG_GATEWAY=network_syslog_gateway
+
+# Traefik
+CLOUDFLARE_EMAIL=cloudflare_email
+CLOUDFLARE_API_KEY=cloudflare_api_key
+
+# Portainer
+PORTAINER_FRONTEND_SERVICE_PORT=portainer_frontend_service_port
+PORTAINER_EDGE_SERVICE_PORT=portainer_edge_service_port
+
+# Cloudflared
+TUNNEL_TOKEN=cloudflared_tunnel_token
+
+# HomeAssistant
+HASS_SERVICE_PORT=homeassistant_service_port
+
+# NodeRed
+NR_SERVICE_PORT=nodered_service_port
+
+# Zigbee2MQTT
+Z2M_SERVICE_PORT=zigbee2mqtt_service_port
+
+# Mosquitto
+MQTT_SERVICE_PORT=mosquitto_service_port
+
+# ESPHome
+ESPHOME_SERVICE_PORT=esphome_service_port
+
+# AppDaemon
+APPDAEMON_SERVICE_PORT=appdaemon_service_port
+
+# MySQL
+MYSQL_ROOT_PASSWORD=mysql_root_password
+MYSQL_SERVICE_PORT=mysql_service_port
+MYSQL_ROOT_HOST=mysql_root_host
+MYSQL_DATABASE=mysql_database
+MYSQL_USER=mysql_user
+MYSQL_PASSWORD=mysql_password
+
+# Frigate
+FRIGATE_SERVICE_PORT_HTTP=frigate_service_port_http
+FRIGATE_SERVICE_PORT_TCP_RTSP=frigate_service_port_tcp_rtsp
+FRIGATE_SERVICE_PORT_TCP_WEBRTC=frigate_service_port_tcp_webrtc
+FRIGATE_SERVICE_PORT_UDP=frigate_service_port_udp
+FRIGATE_PLUS_API_KEY=frigate_plus_api_key
+FRIGATE_RTSP_USER=frigate_rtsp_user
+FRIGATE_RTSP_PASSWORD=frigate_rtsp_password
+FRIGATE_MQTT_HOST=frigate_mqtt_host
+FRIGATE_MQTT_PORT=frigate_mqtt_port
+FRIGATE_MQTT_USER=frigate_mqtt_user
+FRIGATE_MQTT_PASSWORD=frigate_mqtt_password
+FRIGATE_CAM_1_IP=frigate_driveway_cam_ip
+FRIGATE_CAM_1_PORT=frigate_driveway_cam_port
+
+# n8n
+N8N_SERVICE_PORT=n8n_service_port
+
+# PostgreSQL - n8n
+POSTGRES_USER=postgres_user
+POSTGRES_PASSWORD=postgres_password
+POSTGRES_DB=postgres_db
+POSTGRES_NON_ROOT_USER=postgres_non_root_user
+POSTGRES_NON_ROOT_PASSWORD=postgres_non_root_password
+POSTGRES_SERVICE_PORT=postgres_service_port
+
+# Code
+CODE_SERVICE_PORT=code_service_port

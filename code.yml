@@ -1,0 +1,26 @@
+services:
+  code:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code
+    restart: always
+    user: root
+    environment:
+      - TZ=${TZ}
+      - PROXY_DOMAIN=code.${DOMAIN}
+      - DEFAULT_WORKSPACE=${STACK_PATH}
+      - PWA_APPNAME=code-server
+    volumes:
+      - ${STACK_PATH}/code/config:/config
+      - ${STACK_PATH}:${STACK_PATH}
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.code.rule=Host(`code.${DOMAIN}`)
+      - traefik.http.routers.code.entrypoints=websecure
+      - traefik.http.routers.code.tls=true
+      - traefik.http.routers.code.tls.certresolver=${CERT_RESOLVER}
+      - traefik.http.routers.code.service=code
+      - traefik.http.services.code.loadbalancer.server.port=${CODE_SERVICE_PORT}
+    

@@ -1,0 +1,57 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    expose:
+      - 3306
+    environment:
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_HOST=${MYSQL_ROOT_HOST}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - ${STACK_PATH}/mysql/data:/var/lib/mysql
+      - ${STACK_PATH}/mysql/config/my.cnf:/etc/my.cnf
+      - ${STACK_PATH}/mysql/config/my.cnf.d:/etc/my.cnf.d
+      - ${STACK_PATH}/mysql/config/mysql/conf.d:/etc/mysql/conf.d
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.tcp.routers.mysql.rule=HostSNI(`*`)
+      - traefik.tcp.routers.mysql.entrypoints=mysql
+      - traefik.tcp.routers.mysql.service=mysql
+      - traefik.tcp.services.mysql.loadbalancer.server.port=${MYSQL_SERVICE_PORT}
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    user: root
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_NON_ROOT_USER
+      - POSTGRES_NON_ROOT_PASSWORD
+    volumes:
+      - ${STACK_PATH}/postgres/data:/var/lib/postgresql/data
+      - ${STACK_PATH}/postgres/init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.postgres.rule=Host(`postgres.${DOMAIN}`)
+      - traefik.http.routers.postgres.entrypoints=postgres
+      - traefik.http.routers.postgres.service=postgres
+      - traefik.http.services.postgres.loadbalancer.server.port=${POSTGRES_SERVICE_PORT}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
