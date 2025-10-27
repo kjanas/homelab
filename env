@@ -1,4 +1,4 @@
-COMPOSE_FILE=core.yml:frigate.yml:db.yml:smarthome.yml:syslog.yml:homeassistant_test.yml:n8n.yml:code.yml
+COMPOSE_FILE=core.yml:frigate.yml:db.yml:smarthome.yml:syslog.yml:homeassistant_test.yml:n8n.yml:code.yml:drawio.yml
 
 # Common
 TZ=timezone
@@ -79,3 +79,6 @@ POSTGRES_SERVICE_PORT=postgres_service_port
 
 # Code
 CODE_SERVICE_PORT=code_service_port
+
+# draw.io
+DRAWIO_SERVICE_PORT=drawio_service_port
