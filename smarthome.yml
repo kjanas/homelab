@@ -16,7 +16,7 @@ services:
     depends_on:
       - mosquitto
       - nodered
-      - zigbee2mqtt
+      - z2m
       - esphome
       - mysql
     networks:
@@ -40,7 +40,7 @@ services:
     volumes:
       - ${STACK_PATH}/nodered/data:/data
     depends_on:
-      - zigbee2mqtt
+      - z2m
     networks:
       - network_core
     labels:
@@ -52,7 +52,7 @@ services:
       - traefik.http.routers.nodered.service=nodered
       - traefik.http.services.nodered.loadbalancer.server.port=${NR_SERVICE_PORT}
 
-  zigbee2mqtt:
+  z2m:
     image: koenkk/zigbee2mqtt
     container_name: z2m
     restart: always
