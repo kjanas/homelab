@@ -34,6 +34,7 @@ services:
     expose:
       - 5432
     environment:
+      - TZ=${TZ}
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DB
@@ -55,3 +56,28 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  influxdb:
+    image: influxdb:2
+    container_name: influxdb
+    restart: always
+    expose:
+      - 8086
+    environment:
+      - TZ=${TZ}
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_INIT_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_INIT_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_INIT_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_INIT_BUCKET}
+    volumes:
+      - ${STACK_PATH}/influxdb/data:/var/lib/influxdb2
+      - ${STACK_PATH}/influxdb/config:/etc/influxdb2
+    networks:
+      - network_core
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.influxdb.rule=Host(`influxdb.${DOMAIN}`)
+      - traefik.http.routers.influxdb.entrypoints=influxdb
+      - traefik.http.routers.influxdb.service=influxdb
+      - traefik.http.services.influxdb.loadbalancer.server.port=${INFLUXDB_SERVICE_PORT}
