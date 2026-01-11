@@ -129,6 +129,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ${STACK_PATH}/appdaemon/conf:/conf
+      - ${STACK_PATH}/appdaemon/certs:/certs
       - ${STACK_PATH}/homeassistant/config/appdaemon/apps:/homeassistant_apps
     depends_on:
       - homeassistant
