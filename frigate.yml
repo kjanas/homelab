@@ -44,11 +44,11 @@ services:
       - traefik.tcp.services.frigate_rtsp.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_TCP_RTSP}
       # WebRTC
       - traefik.tcp.routers.frigate_webrtc.rule=HostSNI(`*`)
-        # TCP
+      # TCP
       - traefik.tcp.routers.frigate_webrtc.entrypoints=webrtc_tcp
       - traefik.tcp.routers.frigate_webrtc.service=frigate_webrtc
       - traefik.tcp.services.frigate_webrtc.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_TCP_WEBRTC}
-        # UDP
+      # UDP
       - traefik.udp.routers.frigate_webrtc.entrypoints=webrtc_udp
       - traefik.udp.routers.frigate_webrtc.service=frigate_webrtc
       - traefik.udp.services.frigate_webrtc.loadbalancer.server.port=${FRIGATE_SERVICE_PORT_UDP}
